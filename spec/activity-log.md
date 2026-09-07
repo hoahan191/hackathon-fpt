@@ -22,7 +22,7 @@ production bug three months later.
 
 Open **Plan Mode**, point it at this file, and ask it to find the ambiguities
 before you write a line of code. Then decide, as a team, what each one should
-be. Write your four decisions at the bottom of this file under *Decisions*.
+be. Write your four decisions at the bottom of this file under _Decisions_.
 
 You are scored on the quality of those decisions and your reasoning — **not on
 matching a hidden answer.** There is more than one defensible answer to each.
@@ -34,7 +34,7 @@ A judge will ask you to justify one of them.
 
 Record what happened in the system, so it can be queried later.
 
-Every application has *actions* — a user logged in, an order shipped, a file
+Every application has _actions_ — a user logged in, an order shipped, a file
 uploaded, a game started. This component records them and answers questions
 about them.
 
@@ -58,12 +58,12 @@ about them.
 
 An **entry** has:
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| `actor` | string | Who did it. Non-empty. |
-| `action` | string | What they did. Non-empty. |
-| `timestamp` | instant | When it happened. |
-| `metadata` | key/value map | Optional. May contain sensitive values. |
+| Field       | Type          | Notes                                   |
+| ----------- | ------------- | --------------------------------------- |
+| `actor`     | string        | Who did it. Non-empty.                  |
+| `action`    | string        | What they did. Non-empty.               |
+| `timestamp` | instant       | When it happened.                       |
+| `metadata`  | key/value map | Optional. May contain sensitive values. |
 
 ---
 
@@ -126,22 +126,21 @@ and SHALL NOT read the system clock directly.
 
 You are done when:
 
-- [ ] All four `[NEEDS CLARIFICATION]` items are resolved and written down below
-- [ ] Every requirement above has at least one test that references its `REQ-###`
-- [ ] Tests were seen failing before the code existed
-- [ ] Tests pass
-- [ ] No database, file, network call, or UI
-- [ ] Time is injected — no test sleeps or waits
+- [x] All four `[NEEDS CLARIFICATION]` items are resolved and written down below
+- [x] Every requirement above has at least one test that references its `REQ-###`
+- [x] Tests were seen failing before the code existed
+- [x] Tests pass
+- [x] No database, file, network call, or UI — the component is in-memory only; the
+      app's React UI reads it through `queryByActor` / `queryByTimeRange`
+- [x] Time is injected — no test sleeps or waits
 
 ---
 
 ## Decisions
 
-*Fill this in. One or two sentences each. This is what a judge will ask about.*
-
-| ID | Decision | Why |
-| --- | --- | --- |
-| REQ-003 | Entries with the same timestamp are ordered by insertion order, newest first: the most recently recorded entry appears before older entries with the same timestamp, and the ordering is deterministic across repeated queries. | This makes the ordering explicit, stable, and easy to test without inventing a second clock source. It preserves "most recent first" while resolving the tie without depending on system clock precision. |
-| REQ-004 | A value is sensitive when its metadata key name is in a fixed denylist such as `password`, `token`, `secret`, `api_key`, `authorization`, or `session`. The stored replacement is a fixed placeholder `[REDACTED]`; redaction is not reversible. | This keeps the rule objective, predictable, and safe for an in-memory challenge. It avoids needing to inspect arbitrary value shapes or storing a reversible secret vault. |
-| REQ-005 | The time-range is inclusive: an entry is inside the range when its timestamp is greater than or equal to the start and less than or equal to the end. | This aligns with the intuitive meaning of a range query and removes ambiguity at both boundary values. |
-| REQ-006 | "No activity" and "unknown actor" are treated as the same external result: the query returns an empty list. The system does not distinguish between a non-existent actor and a valid actor with zero entries. | This keeps the API simple and consistent with the requirement "return a result indicating no activity" while avoiding a hidden state model or separate error cases. |
+| ID      | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Why                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| REQ-003 | Every entry gets a monotonic insertion sequence number `seq`. Entries are returned newest first by `timestamp`, and where timestamps are equal, by higher `seq` first (last recorded, first returned). The order is total and identical on every repeated query.                                                                                                                                                                                                                                            | Timestamps alone give a partial order, so a sort on timestamp alone is unstable the moment two entries share one. `seq` is assigned by the store, never by the caller, so it cannot be spoofed and it is the only thing that genuinely knows insertion order.                                                                                                                                                                                                                        |
+| REQ-004 | Sensitivity is decided by the **key name**, never by inspecting the value. A default case-insensitive deny-list (`password`, `passwd`, `secret`, `token`, `apiKey`, `otp`, `pin`, `cvv`, `cardNumber`, `ssn`) is applied, plus any extra keys the caller supplies at construction. Redaction is **irreversible**: the store holds the literal string `[REDACTED]` and the original value never enters the store. Key matching and copying apply at **every depth** of the metadata, not just the top level. | Shape-sniffing values produces false negatives on anything that does not look like a secret, and false positives on ordinary text. Key names are what the caller controls and can reason about. Irreversible means a leak of the log is not a leak of the secret — reversible redaction is encryption with extra steps, and we have no key management.                                                                                                                               |
+| REQ-005 | The range is **inclusive at both ends**: an entry with `timestamp === start` or `timestamp === end` is inside. Formally `start <= t <= end`. `start > end` returns no entries rather than throwing.                                                                                                                                                                                                                                                                                                         | Half-open ranges silently drop the entry that lands exactly on a boundary, and coarse clocks make that a common case, not a rare one. Inclusive matches how a human reads "between 09:00 and 10:00". Both boundaries have their own test.                                                                                                                                                                                                                                            |
+| REQ-006 | They are the **same outcome but distinguishable**. An actor query returns `{ entries: [], actorKnown: false }` for an actor the store has never seen, and `{ entries: [], actorKnown: true }` for a known actor with nothing to show — reachable because `queryByActor` takes an optional time range. A rejected entry (REQ-002) does **not** make an actor known. No error is thrown either way.                                                                                                           | "No results" is not an error — a caller asking a legitimate question got a legitimate answer. But "you typed the actor id wrong" and "this person did nothing" lead to different actions, so the caller gets one flag to tell them apart without a second query. The flag is driven only by entries that were actually stored: if a rejected write made an actor known, REQ-002's "record nothing" would not be true, and anyone could grow the known-actor set with invalid writes. |
