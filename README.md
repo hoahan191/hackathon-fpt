@@ -4,7 +4,36 @@ A small, test-driven in-memory activity logging component built for the FPT × G
 
 ## Overview
 
+<<<<<<< Updated upstream
 This project implements the required activity log from [spec/activity-log.md](spec/activity-log.md) without adding persistence, UI, or external dependencies. The goal is to keep the behavior simple, explicit, and easy to validate under competition conditions.
+=======
+## Built app: Where are we eating?
+
+This repo now contains a small browser app for the **Where are we eating?**
+challenge. Each teammate ranks the restaurant options, the app uses Borda
+count scoring to pick a winner, and it explains whether the result came from
+points, first-place votes, or the original option order tie-break.
+
+The shared activity log from [`spec/activity-log.md`](spec/activity-log.md) is
+implemented in memory and used by the app. Sensitive metadata keys are redacted
+before storage.
+
+Run it:
+
+```bash
+npm start
+```
+
+Run the tests:
+
+```bash
+npm test
+```
+
+---
+
+## Pick one of these and start
+>>>>>>> Stashed changes
 
 ## Included functionality
 

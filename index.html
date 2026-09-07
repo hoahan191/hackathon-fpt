@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Where are we eating?</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="workspace" aria-labelledby="app-title">
+        <div class="intro">
+          <p class="eyebrow">Lunch vote</p>
+          <h1 id="app-title">Where are we eating?</h1>
+          <p>Rank the options for each teammate. The app scores every ballot, picks a winner, and explains the tie-break.</p>
+        </div>
+
+        <section class="panel" aria-labelledby="options-title">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Choices</p>
+              <h2 id="options-title">Restaurants</h2>
+            </div>
+            <button id="reset-demo" type="button">Reset</button>
+          </div>
+          <div id="options-list" class="options-list"></div>
+          <form id="option-form" class="inline-form">
+            <label>
+              <span>Add option</span>
+              <input id="option-name" name="option" autocomplete="off" placeholder="Bun Cha Huong Lien" />
+            </label>
+            <button type="submit">Add</button>
+          </form>
+        </section>
+
+        <section class="panel" aria-labelledby="ballots-title">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Ballots</p>
+              <h2 id="ballots-title">Rankings</h2>
+            </div>
+            <button id="decide" type="button">Pick winner</button>
+          </div>
+          <div id="ballots" class="ballots"></div>
+        </section>
+
+        <section class="result-band" aria-live="polite">
+          <div>
+            <p class="eyebrow">Winner</p>
+            <h2 id="winner">Waiting for rankings</h2>
+            <p id="explanation">Use the ballots above, then pick a winner.</p>
+          </div>
+          <dl id="scoreboard" class="scoreboard"></dl>
+        </section>
+
+        <section class="panel log-panel" aria-labelledby="log-title">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Shared requirement</p>
+              <h2 id="log-title">Activity log</h2>
+            </div>
+          </div>
+          <ol id="activity-log" class="activity-log"></ol>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
