@@ -141,7 +141,7 @@ You are done when:
 
 | ID | Decision | Why |
 | --- | --- | --- |
-| REQ-003 | | |
-| REQ-004 | | |
-| REQ-005 | | |
-| REQ-006 | | |
+| REQ-003 | Entries with the same timestamp are ordered by insertion order, newest first: the most recently recorded entry appears before older entries with the same timestamp, and the ordering is deterministic across repeated queries. | This makes the ordering explicit, stable, and easy to test without inventing a second clock source. It preserves "most recent first" while resolving the tie without depending on system clock precision. |
+| REQ-004 | A value is sensitive when its metadata key name is in a fixed denylist such as `password`, `token`, `secret`, `api_key`, `authorization`, or `session`. The stored replacement is a fixed placeholder `[REDACTED]`; redaction is not reversible. | This keeps the rule objective, predictable, and safe for an in-memory challenge. It avoids needing to inspect arbitrary value shapes or storing a reversible secret vault. |
+| REQ-005 | The time-range is inclusive: an entry is inside the range when its timestamp is greater than or equal to the start and less than or equal to the end. | This aligns with the intuitive meaning of a range query and removes ambiguity at both boundary values. |
+| REQ-006 | "No activity" and "unknown actor" are treated as the same external result: the query returns an empty list. The system does not distinguish between a non-existent actor and a valid actor with zero entries. | This keeps the API simple and consistent with the requirement "return a result indicating no activity" while avoiding a hidden state model or separate error cases. |
