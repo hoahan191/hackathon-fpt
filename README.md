@@ -1,71 +1,76 @@
-# Activity Log
+# Where Are We Eating?
 
-A small, test-driven in-memory activity logging component built for the FPT × GitHub Copilot hackathon. It records actions, makes them queryable by actor and time range, and redacts sensitive metadata before storing it.
+A polished Python CLI for helping a group choose a restaurant by combining everyone’s ranked preferences. It turns multiple personal rankings into one fair, explainable winner.
 
-## Overview
+## Why this app
 
-This project implements the required activity log from [spec/activity-log.md](spec/activity-log.md) without adding persistence, UI, or external dependencies. The goal is to keep the behavior simple, explicit, and easy to validate under competition conditions.
+Group dinner decisions are often noisy, subjective, and slow. This app reduces that friction by:
 
-## Included functionality
+- collecting one ranking per person
+- giving more weight to higher-preference choices
+- resolving ties alphabetically
+- rejecting duplicate restaurants in the same ranking
+- explaining the final result in plain language
 
-- record activity entries with an actor, action, timestamp, and optional metadata
-- reject invalid entries when the actor or action is empty
-- return all entries for a given actor, with the newest results first
-- redact sensitive metadata values before storing them
-- query entries within an inclusive time range
-- return an empty result when no entries match
-- inject the current time instead of reading the system clock directly
+## How it works
 
-## Design choices and clarifications
+Each person submits a list of restaurants in order of preference. A weighted score is computed so that a higher-ranked restaurant contributes more than a lower-ranked one. The winner is the restaurant with the strongest total score.
 
-Before implementation, we resolved the four ambiguous items in the spec:
-
-- REQ-003: same-timestamp entries are ordered by insertion order, newest first, and the order is deterministic
-- REQ-004: values are considered sensitive when their metadata key matches a fixed denylist; they are replaced with `[REDACTED]` and are not reversible
-- REQ-005: range queries are inclusive, so entries exactly at the start or end timestamps are included
-- REQ-006: “unknown actor” and “no activity” are treated as the same empty result
-
-## Implementation files
-
-- [activity_log.py](activity_log.py) — core in-memory logic
-- [tests/test_activity_log.py](tests/test_activity_log.py) — specification-driven tests
-- [spec/activity-log.md](spec/activity-log.md) — original requirement document
-
-## Example usage
+Example:
 
 ```python
-from datetime import datetime
-from activity_log import ActivityLog
+from where_are_we_eating import RestaurantPicker
 
-log = ActivityLog()
-log.record(
-    "alice",
-    "logged_in",
-    {"password": "secret123", "role": "admin"},
-    timestamp=datetime(2026, 9, 7, 10, 30),
-)
+picker = RestaurantPicker()
+picker.add_ranking("Ava", ["Korean", "Vietnamese", "Italian"])
+picker.add_ranking("Ben", ["Vietnamese", "Korean", "Italian"])
+picker.add_ranking("Cao", ["Korean", "Italian", "Vietnamese"])
 
-print(log.query_by_actor("alice"))
-print(log.query_by_time_range(datetime(2026, 9, 7, 10, 0), datetime(2026, 9, 7, 11, 0)))
+print(picker.pick_winner())
+print(picker.render_summary())
 ```
 
-## Run the tests
+## CLI usage
 
 ```bash
-cd /Users/hoahan/Desktop/GenAI Trainer/Github_Copilot_hackathon/hackathon-fpt
-python -m pytest -q tests/test_activity_log.py
+python where_are_we_eating.py --interactive
 ```
+
+```bash
+python where_are_we_eating.py \
+  --ranking "Ava: Korean, Vietnamese, Italian" \
+  --ranking "Ben: Vietnamese, Korean, Italian" \
+  --ranking "Cao: Korean, Italian, Vietnamese"
+```
+
+You can also load rankings from a JSON file:
+
+```bash
+python where_are_we_eating.py --file rankings.json
+```
+
+## AI-assisted workflow
+
+This project used AI as a coding accelerator, not as a substitute for engineering judgment:
+
+- GitHub Copilot helped draft the ranking logic and CLI polish
+- AI assisted with test scenarios, especially duplicate checks and tie handling
+- final correctness was enforced through pytest and explicit validation rules
+
+The result is transparent and explainable rather than opaque or magical.
+
+## Project files
+
+- [where_are_we_eating.py](where_are_we_eating.py) — core logic and CLI entry point
+- [tests/test_where_are_we_eating.py](tests/test_where_are_we_eating.py) — behavior tests
+- [ARCHITECTURE.md](ARCHITECTURE.md) — quick architecture overview
+- [JUDGE_TALK.md](JUDGE_TALK.md) — 30-second judge script
 
 ## Verification
 
-The implementation is verified and the test suite is green:
-
 ```bash
-python -m pytest -q tests/test_activity_log.py
+cd /Users/hoahan/Desktop/GenAI Trainer/Github_Copilot_hackathon/hackathon-fpt
+python -m pytest -q
 ```
 
-Observed result: 7 passed in 0.01s.
-
-## Judge-facing summary
-
-This solution demonstrates disciplined specification work, clear ambiguity resolution, and test-first development. It stays within the required constraints of an in-memory system, enforces validation rules, redacts sensitive data safely, and delivers deterministic query behavior under the competition’s time and reliability requirements.
+Current result: 12 passed in 0.01s.

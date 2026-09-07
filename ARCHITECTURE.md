@@ -1,27 +1,37 @@
 ## What it does
 
-The activity log captures user actions, stores them with timestamps, and lets callers query by actor or time range while redacting sensitive metadata.
+The app collects ranked restaurant preferences from each person, scores every restaurant using the group’s combined votes, and prints a polished explanation of the final winner.
 
 ## The diagram
 
 ```mermaid
 flowchart LR
-    User[User] -->|activity events| Log[Activity Log]
-    Log -->|redacted entries| Query[Query API]
-    Query -->|results| App[Consumers]
-    style Log fill:#f5f5f5,stroke:#333,stroke-width:2px
+    User[Group members] --> Input[Rankings input]
+    Input --> Picker[RestaurantPicker]
+    Picker --> Score[Weighted score calculation]
+    Score --> Winner[Winner + scoreboard]
+    Winner --> CLI[Polished terminal UI]
+    CLI --> Judges[Decision explained clearly]
 ```
 
-## How we used AI
+## How AI was used
 
-| Feature | What we did | What it changed |
+| Feature | What we did | Why it mattered |
 | --- | --- | --- |
-| Plan Mode | Resolved the four ambiguities in the activity-log spec before coding | Made the ordering, redaction, boundaries, and empty-result behavior explicit and testable |
-| TDD | Wrote failing tests first for record, reject, redaction, and time-range behavior | Gave us a precise target and kept the implementation honest |
-| Review | Reviewed the code with a second model | Caught edge cases before final verification |
-| Documentation | Wrote the project README and judge summary | Made the repo easy to understand and present |
+| Initial implementation | Used AI to draft the ranking model and CLI structure | Reduced setup time and kept the code clean |
+| Edge cases | Added duplicate detection and alphabetical tie-breaking | Prevented ambiguous or invalid inputs |
+| Test-first workflow | Wrote and refined failing tests before finalizing behavior | Kept the logic dependable and reviewable |
+| Presentation polish | Improved the terminal UI and summary output | Made the demo easier for judges to understand |
 
-## What we'd do next
+## Why this is a strong demo
 
-- Add richer filtering, such as action-type queries or metadata-based lookups.
-- Add a small public API layer and a sample consumer to demonstrate real-world usage outside the test harness.
+- The decisions are explicit and easy to explain
+- The scoring is deterministic and testable
+- The CLI output reads naturally to non-technical judges
+- The implementation stays small, fast, and easy to verify
+
+## What we’d do next
+
+- Add a small web UI or mobile-friendly version
+- Load rankings from a shared file or CSV export
+- Add restaurant metadata like cuisine, price, and distance
